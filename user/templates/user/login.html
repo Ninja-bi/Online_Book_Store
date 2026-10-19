@@ -1,0 +1,145 @@
+{% extends "user/base.html" %}
+{% load static %}
+
+{% block title %}Sign In — NOOK Books{% endblock %}
+{% block nav_login %}active{% endblock %}
+
+{% block content %}
+<div class="auth-card">
+
+  <!-- ─── Left panel: image ─────────────────────────────── -->
+  <div class="auth-image-panel auth-image-panel--login">
+    <div class="image-overlay"></div>
+    <div class="image-badge">
+      <span class="badge-dot"></span>CURATED SANCTUM
+    </div>
+    <blockquote class="image-quote">
+      "A reader lives a thousand lives before he dies. The man who never reads lives only one."
+    </blockquote>
+  </div>
+
+  <!-- ─── Right panel: form ────────────────────────────── -->
+  <div class="auth-form-panel">
+    <div class="form-header">
+      <h1 class="form-title">Log in to your Account</h1>
+      <p class="form-subtitle">Welcome back! Please enter your credentials to access your personal shelf and curated editions.</p>
+    </div>
+
+    <div id="alert-box" class="alert hidden"></div>
+
+    <form id="login-form" novalidate>
+      <!-- Email -->
+      <div class="field-group">
+        <label for="email" class="field-label">Email Address</label>
+        <div class="field-wrap">
+          <input id="email" name="email" type="email" class="field-input" placeholder="reader@example.com" autocomplete="email" required/>
+          <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"/></svg>
+        </div>
+      </div>
+
+      <!-- Password -->
+      <div class="field-group">
+        <label for="password" class="field-label">Password</label>
+        <div class="field-wrap">
+          <input id="password" name="password" type="password" class="field-input" placeholder="••••••••••••" autocomplete="current-password" required/>
+          <button type="button" class="field-icon icon-btn" id="toggle-pw" aria-label="Toggle password visibility">
+            <svg id="eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z"/><path d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/></svg>
+            <svg id="eye-closed" class="hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Remember / Forgot -->
+      <div class="form-row">
+        <label class="checkbox-label">
+          <input type="checkbox" id="remember" class="checkbox-input"/>
+          <span class="checkbox-custom"></span>
+          Remember for 30 days
+        </label>
+        <a href="#" class="link-muted">Forgot password?</a>
+      </div>
+
+      <!-- Submit -->
+      <button type="submit" class="btn-primary" id="login-btn">
+        <span class="btn-text">Log In to NOOK</span>
+        <span class="btn-arrow">→</span>
+        <span class="btn-loader hidden"></span>
+      </button>
+    </form>
+
+    <p class="switch-link">
+      Don't have an account yet?
+      <a href="{% url 'user-register' %}" class="link-bold">Join the Society ↗</a>
+    </p>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // ── Toggle password visibility ─────────────────────────
+  const toggleBtn = document.getElementById('toggle-pw');
+  const pwInput   = document.getElementById('password');
+  const eyeOpen   = document.getElementById('eye-open');
+  const eyeClosed = document.getElementById('eye-closed');
+  toggleBtn.addEventListener('click', () => {
+    const shown = pwInput.type === 'text';
+    pwInput.type = shown ? 'password' : 'text';
+    eyeOpen.classList.toggle('hidden', !shown);
+    eyeClosed.classList.toggle('hidden', shown);
+  });
+
+  // ── Login form submission ──────────────────────────────
+  document.getElementById('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn    = document.getElementById('login-btn');
+    const alert  = document.getElementById('alert-box');
+    const loader = btn.querySelector('.btn-loader');
+    const text   = btn.querySelector('.btn-text');
+    const arrow  = btn.querySelector('.btn-arrow');
+
+    btn.disabled = true;
+    loader.classList.remove('hidden');
+    text.classList.add('hidden');
+    arrow.classList.add('hidden');
+    alert.classList.add('hidden');
+
+    const body = {
+      email:    document.getElementById('email').value.trim(),
+      password: document.getElementById('password').value,
+    };
+
+    try {
+      const res  = await fetch('/api/v1/auth/login/', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(body),
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        localStorage.setItem('access',  data.tokens.access);
+        localStorage.setItem('refresh', data.tokens.refresh);
+        showAlert('success', `Welcome back, ${data.user.name}! Redirecting…`);
+        setTimeout(() => { window.location.href = '/'; }, 1200);
+      } else {
+        const msg = data.non_field_errors?.[0] || data.detail || 'Login failed. Please check your credentials.';
+        showAlert('error', msg);
+      }
+    } catch {
+      showAlert('error', 'Network error. Please try again.');
+    } finally {
+      btn.disabled = false;
+      loader.classList.add('hidden');
+      text.classList.remove('hidden');
+      arrow.classList.remove('hidden');
+    }
+  });
+
+  function showAlert(type, msg) {
+    const alert = document.getElementById('alert-box');
+    alert.textContent = msg;
+    alert.className   = `alert alert-${type}`;
+  }
+</script>
+{% endblock %}

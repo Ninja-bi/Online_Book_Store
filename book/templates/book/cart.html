@@ -1,0 +1,411 @@
+{% extends "layout.html" %}
+{% load static %}
+
+{% block title %}Your Shopping Cart — NOOK Books{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/cart.css' %}" />
+{% endblock %}
+
+{% block content %}
+<div class="container cart-page-wrapper">
+
+  <!-- ─── Checkout Stepper ─────────────────────────────────────────────────── -->
+  <nav class="checkout-stepper" aria-label="Checkout Progress">
+    <div class="step-item active">
+      <span class="step-number">01</span>
+      <span>Cart</span>
+    </div>
+    <div class="step-item">
+      <span class="step-number">02</span>
+      <span>Shipping</span>
+    </div>
+    <div class="step-item">
+      <span class="step-number">03</span>
+      <span>Payment</span>
+    </div>
+    <div class="step-item">
+      <span class="step-number">04</span>
+      <span>Review</span>
+    </div>
+  </nav>
+
+  <!-- ─── Cart Main Layout Grid ────────────────────────────────────────────── -->
+  <div class="cart-layout-grid">
+
+    <!-- Left Column: Items List & Frequently Added -->
+    <div class="cart-left-column">
+
+      {% if cart.items.all %}
+        <!-- Cart Items List -->
+        <div class="cart-items-column" id="cartItemsList">
+          {% for item in cart.items.all %}
+            <div class="cart-item-card" id="cartItem-{{ item.book.id }}">
+              <!-- Cover Image -->
+              <div class="cart-item-cover-box">
+                {% if item.book.cover_image %}
+                  <img src="{{ item.book.cover_image.url }}" alt="{{ item.book.title }}" class="cart-item-cover-img" />
+                {% else %}
+                  <img src="{% static 'img/it_ends_with_us.jpg' %}" alt="{{ item.book.title }}" class="cart-item-cover-img" />
+                {% endif %}
+              </div>
+
+              <!-- Item Body -->
+              <div class="cart-item-body">
+                <div class="cart-item-top">
+                  <div class="cart-item-tag-row">
+                    {% if item.book.display_tag %}
+                      <span class="cart-item-tag">{{ item.book.display_tag }}</span>
+                    {% endif %}
+                    <span class="cart-item-format">{{ item.book.format }}</span>
+                  </div>
+
+                  <div class="cart-item-price-block">
+                    <div>
+                      <span class="cart-item-price-main">&#8377;{{ item.book.price|floatformat:0 }}</span>
+                      {% if item.book.original_price %}
+                        <span class="cart-item-price-orig">&#8377;{{ item.book.original_price|floatformat:0 }}</span>
+                      {% endif %}
+                    </div>
+                    {% if item.book.discount_percentage %}
+                      <div class="cart-item-discount-label">{{ item.book.discount_percentage }}% OFF</div>
+                    {% endif %}
+                  </div>
+                </div>
+
+                <h3 class="cart-item-title">{{ item.book.title }}</h3>
+                <p class="cart-item-author">{{ item.book.author }}</p>
+
+                <!-- Actions: Qty + Wishlist + Remove -->
+                <div class="cart-item-actions">
+                  <!-- Quantity Pill -->
+                  <div class="qty-control-pill">
+                    <button
+                      type="button"
+                      class="qty-btn js-qty-btn"
+                      data-action="decrement"
+                      data-book-id="{{ item.book.id }}"
+                      aria-label="Decrease quantity"
+                    >&minus;</button>
+                    <span class="qty-number" id="qtyVal-{{ item.book.id }}">{{ item.quantity }}</span>
+                    <button
+                      type="button"
+                      class="qty-btn js-qty-btn"
+                      data-action="increment"
+                      data-book-id="{{ item.book.id }}"
+                      aria-label="Increase quantity"
+                    >&plus;</button>
+                  </div>
+
+                  <!-- Move to Wishlist -->
+                  <button
+                    type="button"
+                    class="action-link-btn js-cart-wishlist"
+                    data-title="{{ item.book.title }}"
+                  >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                    </svg>
+                    <span>Move to Wishlist</span>
+                  </button>
+
+                  <!-- Remove Item -->
+                  <button
+                    type="button"
+                    class="action-link-btn remove-btn js-cart-remove"
+                    data-book-id="{{ item.book.id }}"
+                    data-title="{{ item.book.title }}"
+                  >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="3 6 5 6 21 6"></polyline>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                    <span>Remove</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <!-- Empty Cart -->
+        <div class="cart-empty-box">
+          <div class="empty-icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="9" cy="21" r="1"></circle>
+              <circle cx="20" cy="21" r="1"></circle>
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+            </svg>
+          </div>
+          <h2 class="empty-title">Your cart is empty</h2>
+          <p class="empty-desc">Explore our curated collections and discover stories handpicked for curious minds.</p>
+          <a href="{% url 'book-catalog' %}" class="btn-signin" style="display: inline-flex;">Explore Books</a>
+        </div>
+      {% endif %}
+
+      <!-- ─── Frequently Added Together ──────────────────────────────────── -->
+      <section class="frequently-added-section">
+        <div class="frequently-header-row">
+          <div>
+            <h3 class="frequently-title">Frequently Added Together</h3>
+            <p class="frequently-sub">Complete your cart to unlock free express gift packing</p>
+          </div>
+          <a href="{% url 'book-catalog' %}" class="frequently-link-all">
+            <span>Explore All</span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </a>
+        </div>
+
+        <div class="frequently-grid">
+          {% for freq in frequently_added %}
+            <div class="frequently-card">
+              <div class="frequently-cover-box">
+                {% if freq.cover_image %}
+                  <img src="{{ freq.cover_image.url }}" alt="{{ freq.title }}" class="frequently-cover-img" />
+                {% else %}
+                  <img src="{% static 'img/god_of_woods.jpg' %}" alt="{{ freq.title }}" class="frequently-cover-img" />
+                {% endif %}
+              </div>
+
+              <a href="{% url 'book-detail-page' freq.id %}" class="frequently-title-link" title="{{ freq.title }}">
+                {{ freq.title }}
+              </a>
+              <p class="frequently-author">{{ freq.author }}</p>
+
+              <div class="frequently-bottom-row">
+                <span class="frequently-price">&#8377;{{ freq.price|floatformat:0 }}</span>
+                <button
+                  type="button"
+                  class="btn-frequently-add js-freq-add"
+                  data-book-id="{{ freq.id }}"
+                  data-title="{{ freq.title }}"
+                >
+                  + Add
+                </button>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </section>
+
+    </div>
+
+    <!-- Right Column: Order Summary Card -->
+    <div class="cart-right-column">
+      <div class="order-summary-card">
+        <h2 class="summary-heading">Order Summary</h2>
+
+        <div class="summary-table">
+          <div class="summary-row">
+            <span>Original Total</span>
+            <span class="summary-val" id="summaryOriginalTotal">&#8377;{{ cart.original_total|floatformat:0 }}</span>
+          </div>
+
+          <div class="summary-row">
+            <span id="summarySubtotalLabel">Cart Subtotal ({{ cart.total_items }} items)</span>
+            <span class="summary-val" id="summarySubtotal">&#8377;{{ cart.subtotal|floatformat:0 }}</span>
+          </div>
+
+          <div class="summary-row">
+            <span>Reader Discount 🏷</span>
+            <span class="summary-discount-val" id="summaryDiscount">&minus;&#8377;{{ cart.discount|floatformat:0 }}</span>
+          </div>
+
+          <div class="summary-row">
+            <span>Estimated Delivery ⓘ</span>
+            <span class="summary-free-val">FREE</span>
+          </div>
+
+          <div class="summary-row">
+            <span>Estimated Taxes &amp; GST</span>
+            <span class="summary-val">Included</span>
+          </div>
+        </div>
+
+        <div class="summary-divider"></div>
+
+        <div class="summary-total-row">
+          <div class="total-label-box">
+            <span class="total-title">Total Payable</span>
+            <span class="total-sub">Inclusive of all local taxes</span>
+          </div>
+          <div class="total-amount-box">
+            <div class="total-payable-amount" id="summaryTotalPayable">&#8377;{{ cart.total_payable|floatformat:0 }}</div>
+            <div class="total-savings-text" id="summarySavings">
+              You save &#8377;{{ cart.total_savings|floatformat:0 }} ({{ cart.savings_percentage }}%)
+            </div>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          class="btn-checkout"
+          id="btnProceedCheckout"
+        >
+          <span>Proceed to Checkout</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue || '';
+    }
+
+    const csrftoken = getCookie('csrftoken') || '{{ csrf_token }}';
+
+    // Helper to send AJAX requests to cart API
+    function postCartAction(url, data, callback) {
+      fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrftoken,
+        },
+        body: JSON.stringify(data),
+      })
+      .then(res => {
+        if (!res.ok) {
+          throw new Error('HTTP ' + res.status);
+        }
+        return res.json();
+      })
+      .then(resData => {
+        if (callback) callback(resData);
+      })
+      .catch(err => {
+        console.error('Cart action failed:', err);
+        window.showToast('Could not update cart. Please try again.');
+      });
+    }
+
+    function updateSummaryUI(cartData) {
+      if (!cartData) return;
+
+      const origEl = document.getElementById('summaryOriginalTotal');
+      const subEl = document.getElementById('summarySubtotal');
+      const subLabelEl = document.getElementById('summarySubtotalLabel');
+      const discEl = document.getElementById('summaryDiscount');
+      const totalEl = document.getElementById('summaryTotalPayable');
+      const saveEl = document.getElementById('summarySavings');
+
+      if (origEl) origEl.innerHTML = '&#8377;' + Math.round(cartData.original_total);
+      if (subEl) subEl.innerHTML = '&#8377;' + Math.round(cartData.subtotal);
+      if (subLabelEl) subLabelEl.textContent = 'Cart Subtotal (' + cartData.total_items + ' items)';
+      if (discEl) discEl.innerHTML = '&minus;&#8377;' + Math.round(cartData.discount);
+      if (totalEl) totalEl.innerHTML = '&#8377;' + Math.round(cartData.total_payable);
+      if (saveEl) saveEl.innerHTML = 'You save &#8377;' + Math.round(cartData.total_savings) + ' (' + cartData.savings_percentage + '%)';
+
+      // Update badge in navbar
+      const badges = document.querySelectorAll('.cart-count-badge');
+      badges.forEach(b => {
+        b.textContent = cartData.total_items;
+        b.style.display = cartData.total_items > 0 ? 'flex' : 'none';
+      });
+    }
+
+    // Quantity Increment / Decrement
+    document.querySelectorAll('.js-qty-btn').forEach(btn => {
+      btn.addEventListener('click', function () {
+        const action = this.getAttribute('data-action');
+        const bookId = this.getAttribute('data-book-id');
+        const qtySpan = document.getElementById('qtyVal-' + bookId);
+        let currentQty = parseInt(qtySpan.textContent, 10) || 1;
+
+        let newQty = action === 'increment' ? currentQty + 1 : currentQty - 1;
+        if (newQty < 1) newQty = 1;
+
+        postCartAction("{% url 'cart-update-qty' %}", { book_id: bookId, quantity: newQty }, function (res) {
+          if (res.success) {
+            qtySpan.textContent = newQty;
+            updateSummaryUI(res.cart);
+          } else if (res.error) {
+            window.showToast(res.error);
+          }
+        });
+      });
+    });
+
+    // Remove item from cart
+    document.querySelectorAll('.js-cart-remove').forEach(btn => {
+      btn.addEventListener('click', function () {
+        const bookId = this.getAttribute('data-book-id');
+        const title = this.getAttribute('data-title');
+        const card = document.getElementById('cartItem-' + bookId);
+
+        postCartAction("{% url 'cart-remove-item' %}", { book_id: bookId }, function (res) {
+          if (res.success) {
+            if (card) {
+              card.style.opacity = '0';
+              card.style.transform = 'translateY(10px)';
+              setTimeout(() => card.remove(), 250);
+            }
+            updateSummaryUI(res.cart);
+            window.showToast('Removed "<strong>' + title + '</strong>" from cart.');
+
+            if (res.cart.total_items === 0) {
+              setTimeout(() => location.reload(), 300);
+            }
+          }
+        });
+      });
+    });
+
+    // Wishlist Button
+    document.querySelectorAll('.js-cart-wishlist').forEach(btn => {
+      btn.addEventListener('click', function () {
+        const title = this.getAttribute('data-title');
+        window.showToast('Moved "<strong>' + title + '</strong>" to your wishlist!');
+      });
+    });
+
+    // Add Frequently Added Book
+    document.querySelectorAll('.js-freq-add').forEach(btn => {
+      btn.addEventListener('click', function () {
+        const bookId = this.getAttribute('data-book-id');
+        const title = this.getAttribute('data-title');
+
+        postCartAction("{% url 'cart-add-item' %}", { book_id: bookId, quantity: 1 }, function (res) {
+          if (res.success) {
+            window.showToast('Added "<strong>' + title + '</strong>" to cart!');
+            setTimeout(() => location.reload(), 300);
+          }
+        });
+      });
+    });
+
+    // Proceed to checkout button
+    const btnCheckout = document.getElementById('btnProceedCheckout');
+    if (btnCheckout) {
+      btnCheckout.addEventListener('click', function () {
+        window.showToast('Proceeding to Shipping &amp; Payment...');
+      });
+    }
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,423 @@
+{% extends "layout.html" %}
+{% load static %}
+
+{% block title %}{{ book.title }} by {{ book.author }} — NOOK Books{% endblock %}
+{% block nav_shop %}active{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/books.css' %}" />
+{% endblock %}
+
+{% block content %}
+<div class="container book-detail-wrapper">
+
+  <!-- ─── Breadcrumb ───────────────────────────────────────────────────────── -->
+  <nav class="breadcrumb-nav" aria-label="Breadcrumb">
+    <a href="{% url 'home' %}">Home</a>
+    <span>/</span>
+    <a href="{% url 'book-catalog' %}">Shop</a>
+    <span>/</span>
+    <a href="{% url 'book-catalog' %}?category={{ book.category }}">{{ book.get_category_display }}</a>
+    <span>/</span>
+    <span style="color: #121417; font-weight: 600;">{{ book.title }}</span>
+  </nav>
+
+  <!-- ─── Main Showcase Grid (2 Columns) ───────────────────────────────────── -->
+  <div class="detail-main-grid">
+
+    <!-- Left: Gallery & 3D Showcase Stage -->
+    <div class="book-showcase-box">
+      <!-- Thumbnail Strip -->
+      <div class="thumbnail-strip">
+        <div class="thumb-item active" data-img-src="{% if book.cover_image %}{{ book.cover_image.url }}{% else %}{% static 'img/it_ends_with_us.jpg' %}{% endif %}">
+          {% if book.cover_image %}
+            <img src="{{ book.cover_image.url }}" alt="{{ book.title }} front" />
+          {% else %}
+            <img src="{% static 'img/it_ends_with_us.jpg' %}" alt="{{ book.title }} front" />
+          {% endif %}
+        </div>
+        <div class="thumb-item" data-img-src="{% static 'img/hero_reading.jpg' %}">
+          <img src="{% static 'img/hero_reading.jpg' %}" alt="Atmosphere" />
+        </div>
+        <div class="thumb-item" data-img-src="{% if book.cover_image %}{{ book.cover_image.url }}{% else %}{% static 'img/court_thorns_roses.jpg' %}{% endif %}">
+          <img src="{% if book.cover_image %}{{ book.cover_image.url }}{% else %}{% static 'img/court_thorns_roses.jpg' %}{% endif %}" alt="Alternative" />
+        </div>
+        <div class="thumb-item" data-img-src="{% static 'user/img/bookstore_login.jpg' %}">
+          <img src="{% static 'user/img/bookstore_login.jpg' %}" alt="Sanctuary" />
+        </div>
+      </div>
+
+      <!-- Main Stage with 3D Book -->
+      <div class="showcase-stage">
+        <button type="button" class="stage-nav-btn stage-nav-prev" id="btnPrevImg" aria-label="Previous image">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+        </button>
+
+        <figure class="showcase-book-figure" id="featuredBookFigure">
+          {% if book.cover_image %}
+            <img id="mainFeaturedImg" src="{{ book.cover_image.url }}" alt="{{ book.title }}" />
+          {% else %}
+            <img id="mainFeaturedImg" src="{% static 'img/it_ends_with_us.jpg' %}" alt="{{ book.title }}" />
+          {% endif %}
+        </figure>
+
+        <button type="button" class="stage-nav-btn stage-nav-next" id="btnNextImg" aria-label="Next image">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Right: Book Metadata & Purchase Info -->
+    <div class="detail-info-box">
+      {% if book.is_bestseller %}
+        <span class="badge-bestseller">BESTSELLER</span>
+      {% endif %}
+
+      <h1 class="detail-title">{{ book.title }}</h1>
+      <p class="detail-author">{{ book.author }}</p>
+
+      <div class="detail-rating-row">
+        <span class="star-icon">★</span>
+        <span class="rating-score">{{ book.rating }}</span>
+        <span class="rating-count">({{ book.rating_count }})</span>
+        <span style="color: #cbd5e1; margin: 0 4px;">•</span>
+        <span style="color: #5c626b; font-weight: 500;">{{ book.format }}</span>
+      </div>
+
+      <div class="detail-price-row">
+        <span class="detail-price-main">&#8377;{{ book.price|floatformat:0 }}</span>
+        {% if book.original_price %}
+          <span class="detail-price-orig">&#8377;{{ book.original_price|floatformat:0 }}</span>
+        {% endif %}
+        {% if book.discount_percentage %}
+          <span class="discount-pill">{{ book.discount_percentage }}% OFF</span>
+        {% endif %}
+      </div>
+
+      <p class="detail-summary-text">
+        {{ book.description }}
+      </p>
+
+      <!-- Action Buttons -->
+      <div class="detail-actions-row">
+        <button
+          type="button"
+          class="btn-detail-add js-add-to-cart"
+          data-id="{{ book.id }}"
+          data-title="{{ book.title }}"
+          data-price="{{ book.price }}"
+          data-cover="{% if book.cover_image %}{{ book.cover_image.url }}{% endif %}"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="9" cy="21" r="1"></circle>
+            <circle cx="20" cy="21" r="1"></circle>
+            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+          </svg>
+          <span>Add to Cart</span>
+        </button>
+
+        <button
+          type="button"
+          class="btn-wishlist"
+          id="btnWishlist"
+          data-title="{{ book.title }}"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+          </svg>
+          <span>Wishlist</span>
+        </button>
+      </div>
+
+      <!-- Perks / Guarantees -->
+      <div class="perks-row">
+        <div class="perk-item">
+          <span class="perk-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="1" y="3" width="15" height="13"></rect>
+              <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+              <circle cx="5.5" cy="18.5" r="2.5"></circle>
+              <circle cx="18.5" cy="18.5" r="2.5"></circle>
+            </svg>
+          </span>
+          <div>
+            <p class="perk-title">Free Shipping</p>
+            <p class="perk-sub">on orders above &#8377;499</p>
+          </div>
+        </div>
+
+        <div class="perk-item">
+          <span class="perk-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+          </span>
+          <div>
+            <p class="perk-title">Secure Payments</p>
+            <p class="perk-sub">100% safe &amp; trusted</p>
+          </div>
+        </div>
+
+        <div class="perk-item">
+          <span class="perk-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="1 4 1 10 7 10"></polyline>
+              <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+            </svg>
+          </span>
+          <div>
+            <p class="perk-title">Easy Returns</p>
+            <p class="perk-sub">within 7 days</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ─── Bottom Section: Details & Related Books ──────────────────────────── -->
+  <div class="detail-bottom-grid">
+
+    <!-- Left Card: Tabs & Specs -->
+    <div class="detail-card-panel">
+      <!-- Tabs Header -->
+      <div class="tabs-header">
+        <button type="button" class="tab-btn active" data-tab="tabOverview">Overview</button>
+        <button type="button" class="tab-btn" data-tab="tabDetails">Details</button>
+        <button type="button" class="tab-btn" data-tab="tabAuthor">Author</button>
+        <button type="button" class="tab-btn" data-tab="tabReviews">Reviews</button>
+      </div>
+
+      <!-- Tab Content: Overview -->
+      <div id="tabOverview" class="tab-pane">
+        <h3 class="about-book-heading">About the Book</h3>
+        <p class="about-book-desc">
+          {{ book.description }}
+        </p>
+
+        <!-- 2x2 Specs Grid (All loaded from database) -->
+        <div class="specs-grid">
+          <div class="spec-box">
+            <span class="spec-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+                <line x1="7" y1="7" x2="7.01" y2="7"></line>
+              </svg>
+            </span>
+            <div>
+              <p class="spec-label">Genre</p>
+              <p class="spec-val">{{ book.get_category_display }}</p>
+            </div>
+          </div>
+
+          <div class="spec-box">
+            <span class="spec-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+              </svg>
+            </span>
+            <div>
+              <p class="spec-label">Pages</p>
+              <p class="spec-val">{{ book.pages }}</p>
+            </div>
+          </div>
+
+          <div class="spec-box">
+            <span class="spec-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+              </svg>
+            </span>
+            <div>
+              <p class="spec-label">Language</p>
+              <p class="spec-val">{{ book.language }}</p>
+            </div>
+          </div>
+
+          <div class="spec-box">
+            <span class="spec-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+              </svg>
+            </span>
+            <div>
+              <p class="spec-label">Publisher</p>
+              <p class="spec-val">{{ book.publisher }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Content: Details -->
+      <div id="tabDetails" class="tab-pane" style="display: none;">
+        <h3 class="about-book-heading">Publication Details</h3>
+        <p class="about-book-desc">
+          <strong>ISBN:</strong> {{ book.isbn|default:"N/A" }}<br />
+          <strong>Format:</strong> {{ book.format }}<br />
+          <strong>In Stock:</strong> {% if book.in_stock %}{{ book.stock }} units available{% else %}Out of Stock{% endif %}<br />
+          <strong>Date Added:</strong> {{ book.created_at|date:"F j, Y" }}
+        </p>
+      </div>
+
+      <!-- Tab Content: Author -->
+      <div id="tabAuthor" class="tab-pane" style="display: none;">
+        <h3 class="about-book-heading">About {{ book.author }}</h3>
+        <p class="about-book-desc">
+          {{ book.author }} is a celebrated and bestselling author known worldwide for captivating storytelling, unforgettable emotional resonance, and masterful character development.
+        </p>
+      </div>
+
+      <!-- Tab Content: Reviews -->
+      <div id="tabReviews" class="tab-pane" style="display: none;">
+        <h3 class="about-book-heading">Reader Reviews ({{ book.rating_count }})</h3>
+        <p class="about-book-desc">
+          ★ {{ book.rating }} out of 5 based on {{ book.rating_count }}. Readers praise its compelling prose, heart-touching perspective, and page-turning plot.
+        </p>
+      </div>
+    </div>
+
+    <!-- Right Card: You May Also Like -->
+    <div class="detail-card-panel">
+      <div class="related-header-row">
+        <h3 class="section-heading" style="font-size: 1.28rem;">You May Also Like</h3>
+        <a href="{% url 'book-catalog' %}?category={{ book.category }}" class="section-link-more" style="font-size: 0.88rem;">
+          <span>View All</span>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </a>
+      </div>
+
+      <!-- Recommended Grid (From database) -->
+      <div class="related-grid">
+        {% for rel in related_books %}
+          <div class="book-card">
+            <a href="{% url 'book-detail-page' rel.id %}" class="book-cover-wrap">
+              {% if rel.cover_image %}
+                <img src="{{ rel.cover_image.url }}" alt="{{ rel.title }}" class="book-cover-img" />
+              {% else %}
+                <img src="{% static 'img/it_ends_with_us.jpg' %}" alt="{{ rel.title }}" class="book-cover-img" />
+              {% endif %}
+            </a>
+
+            <div class="book-info">
+              <a href="{% url 'book-detail-page' rel.id %}" class="book-title" title="{{ rel.title }}">
+                {{ rel.title }}
+              </a>
+              <p class="book-author">{{ rel.author }}</p>
+
+              <div class="book-rating-row">
+                <span class="star-icon">★</span>
+                <span class="rating-score">{{ rel.rating }}</span>
+                <span class="rating-count">({{ rel.rating_count }})</span>
+              </div>
+
+              <div class="book-price-row">
+                <span class="price-current">&#8377;{{ rel.price|floatformat:0 }}</span>
+                {% if rel.original_price %}
+                  <span class="price-original">&#8377;{{ rel.original_price|floatformat:0 }}</span>
+                {% endif %}
+              </div>
+
+              <button
+                type="button"
+                class="btn-add-cart js-add-to-cart"
+                data-id="{{ rel.id }}"
+                data-title="{{ rel.title }}"
+                data-price="{{ rel.price }}"
+                data-cover="{% if rel.cover_image %}{{ rel.cover_image.url }}{% endif %}"
+              >
+                + Add to Cart
+              </button>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    // Thumbnail switching
+    const thumbs = Array.from(document.querySelectorAll('.thumb-item'));
+    const mainImg = document.getElementById('mainFeaturedImg');
+
+    thumbs.forEach(thumb => {
+      thumb.addEventListener('click', function () {
+        thumbs.forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+        const src = this.getAttribute('data-img-src');
+        if (mainImg && src) {
+          mainImg.src = src;
+        }
+      });
+    });
+
+    const btnNext = document.getElementById('btnNextImg');
+    const btnPrev = document.getElementById('btnPrevImg');
+
+    if (btnNext) {
+      btnNext.addEventListener('click', function () {
+        const activeIdx = thumbs.findIndex(t => t.classList.contains('active'));
+        const nextIdx = (activeIdx + 1) % thumbs.length;
+        thumbs[nextIdx].click();
+      });
+    }
+
+    if (btnPrev) {
+      btnPrev.addEventListener('click', function () {
+        const activeIdx = thumbs.findIndex(t => t.classList.contains('active'));
+        const prevIdx = (activeIdx - 1 + thumbs.length) % thumbs.length;
+        thumbs[prevIdx].click();
+      });
+    }
+
+    // Wishlist Toggle
+    const btnWish = document.getElementById('btnWishlist');
+    if (btnWish) {
+      btnWish.addEventListener('click', function () {
+        const title = this.getAttribute('data-title');
+        this.classList.toggle('active');
+        if (this.classList.contains('active')) {
+          this.style.borderColor = '#e11d48';
+          this.style.color = '#e11d48';
+          window.showToast('Added "<strong>' + title + '</strong>" to your wishlist!');
+        } else {
+          this.style.borderColor = '#d1d5db';
+          this.style.color = '#121417';
+          window.showToast('Removed "<strong>' + title + '</strong>" from your wishlist.');
+        }
+      });
+    }
+
+    // Tabs
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const tabPanes = document.querySelectorAll('.tab-pane');
+
+    tabBtns.forEach(btn => {
+      btn.addEventListener('click', function () {
+        const tabId = this.getAttribute('data-tab');
+        tabBtns.forEach(b => b.classList.remove('active'));
+        tabPanes.forEach(p => p.style.display = 'none');
+        this.classList.add('active');
+        const pane = document.getElementById(tabId);
+        if (pane) {
+          pane.style.display = 'block';
+        }
+      });
+    });
+  });
+</script>
+{% endblock %}

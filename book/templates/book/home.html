@@ -1,0 +1,201 @@
+{% extends "layout.html" %}
+{% load static %}
+
+{% block title %}NOOK — Explore, Dream, Read{% endblock %}
+{% block nav_home %}active{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/books.css' %}" />
+{% endblock %}
+
+{% block content %}
+<div class="container">
+
+  <!-- ─── Hero Section ─────────────────────────────────────────────────────── -->
+  <section class="hero-section">
+    <h1 class="hero-title">
+      Explore, dream,<br />
+      read at Nook
+    </h1>
+
+    <!-- Floating Search Bar -->
+    <div class="hero-search-wrapper">
+      <form action="{% url 'book-catalog' %}" method="GET" class="hero-search-form">
+        <span class="search-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </span>
+        <input
+          type="text"
+          name="search"
+          class="hero-search-input"
+          placeholder="What are you looking for?"
+          value="{{ search_query|default:'' }}"
+        />
+        <button type="submit" class="hero-search-btn">
+          <span>Search</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </button>
+      </form>
+    </div>
+
+    <!-- Hero Image Banner -->
+    <div class="hero-banner-frame">
+      <img
+        src="{% static 'img/hero_reading.jpg' %}"
+        alt="Cozy reading desk at Nook"
+        class="hero-banner-img"
+      />
+    </div>
+  </section>
+
+  <!-- ─── Bestsellers Section (Curated Card) ────────────────────────────────── -->
+  <section class="content-card-section">
+    <div class="curated-card">
+      <div class="card-header-row">
+        <h2 class="section-heading">Bestsellers</h2>
+        <a href="{% url 'book-catalog' %}?bestseller=1" class="section-link-more">
+          <span>Show all</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="7" y1="17" x2="17" y2="7"></line>
+            <polyline points="7 7 17 7 17 17"></polyline>
+          </svg>
+        </a>
+      </div>
+
+      <!-- Books Grid (Loaded directly from Database) -->
+      <div class="books-grid">
+        {% for book in bestsellers %}
+          <div class="book-card">
+            <a href="{% url 'book-detail-page' book.id %}" class="book-cover-wrap">
+              {% if book.cover_image %}
+                <img src="{{ book.cover_image.url }}" alt="{{ book.title }}" class="book-cover-img" />
+              {% else %}
+                <img src="{% static 'img/it_ends_with_us.jpg' %}" alt="{{ book.title }}" class="book-cover-img" />
+              {% endif %}
+              <div class="book-cover-badge">{{ book.title }}</div>
+            </a>
+
+            <div class="book-info">
+              <a href="{% url 'book-detail-page' book.id %}" class="book-title" title="{{ book.title }}">
+                {{ book.title }}
+              </a>
+              <p class="book-author">{{ book.author }}</p>
+
+              <div class="book-rating-row">
+                <span class="star-icon">★</span>
+                <span class="rating-score">{{ book.rating }}</span>
+                <span class="rating-count">({{ book.rating_count }})</span>
+              </div>
+
+              <div class="book-price-row">
+                <span class="price-current">&#8377;{{ book.price|floatformat:0 }}</span>
+                {% if book.original_price %}
+                  <span class="price-original">&#8377;{{ book.original_price|floatformat:0 }}</span>
+                {% endif %}
+              </div>
+
+              <button
+                type="button"
+                class="btn-add-cart js-add-to-cart"
+                data-id="{{ book.id }}"
+                data-title="{{ book.title }}"
+                data-price="{{ book.price }}"
+                data-cover="{% if book.cover_image %}{{ book.cover_image.url }}{% endif %}"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="9" cy="21" r="1"></circle>
+                  <circle cx="20" cy="21" r="1"></circle>
+                  <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                </svg>
+                <span>Add to Cart</span>
+              </button>
+            </div>
+          </div>
+        {% empty %}
+          <p style="grid-column: 1 / -1; text-align: center; color: #6b7280; padding: 40px;">
+            No books found in database.
+          </p>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── Browse Categories Strip ─────────────────────────────────────────── -->
+  <section class="content-card-section" style="margin-top: 10px;">
+    <div class="curated-card" style="padding: 32px 38px;">
+      <div class="card-header-row" style="margin-bottom: 20px;">
+        <h3 class="section-heading" style="font-size: 1.35rem;">Explore by Genre</h3>
+        <a href="{% url 'book-catalog' %}" class="section-link-more">View Catalog ↗</a>
+      </div>
+
+      <div class="category-filter-strip">
+        <a href="{% url 'book-catalog' %}" class="category-pill active">All Genres</a>
+        {% for cat_val, cat_label in categories %}
+          <a href="{% url 'book-catalog' %}?category={{ cat_val }}" class="category-pill">
+            {{ cat_label }}
+          </a>
+        {% endfor %}
+      </div>
+
+      <!-- More Curated Reads -->
+      <div class="books-grid">
+        {% for book in other_books %}
+          <div class="book-card">
+            <a href="{% url 'book-detail-page' book.id %}" class="book-cover-wrap">
+              {% if book.cover_image %}
+                <img src="{{ book.cover_image.url }}" alt="{{ book.title }}" class="book-cover-img" />
+              {% else %}
+                <img src="{% static 'img/it_ends_with_us.jpg' %}" alt="{{ book.title }}" class="book-cover-img" />
+              {% endif %}
+              <div class="book-cover-badge">{{ book.title }}</div>
+            </a>
+
+            <div class="book-info">
+              <a href="{% url 'book-detail-page' book.id %}" class="book-title" title="{{ book.title }}">
+                {{ book.title }}
+              </a>
+              <p class="book-author">{{ book.author }}</p>
+
+              <div class="book-rating-row">
+                <span class="star-icon">★</span>
+                <span class="rating-score">{{ book.rating }}</span>
+                <span class="rating-count">({{ book.rating_count }})</span>
+              </div>
+
+              <div class="book-price-row">
+                <span class="price-current">&#8377;{{ book.price|floatformat:0 }}</span>
+                {% if book.original_price %}
+                  <span class="price-original">&#8377;{{ book.original_price|floatformat:0 }}</span>
+                {% endif %}
+              </div>
+
+              <button
+                type="button"
+                class="btn-add-cart js-add-to-cart"
+                data-id="{{ book.id }}"
+                data-title="{{ book.title }}"
+                data-price="{{ book.price }}"
+                data-cover="{% if book.cover_image %}{{ book.cover_image.url }}{% endif %}"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="9" cy="21" r="1"></circle>
+                  <circle cx="20" cy="21" r="1"></circle>
+                  <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                </svg>
+                <span>Add to Cart</span>
+              </button>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+</div>
+{% endblock %}
