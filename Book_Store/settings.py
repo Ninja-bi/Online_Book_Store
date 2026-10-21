@@ -48,6 +48,14 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.vercel.app',
+    'https://online-book-store-flax-five.vercel.app',
+    'http://127.0.0.1:8000',
+    'http://localhost:8000',
+]
+
+
 
 # Application definition
 
@@ -109,7 +117,13 @@ WSGI_APPLICATION = 'Book_Store.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.1/ref/settings/#databases
 
-_db_url = os.getenv("DATABASE_URL")
+_DEFAULT_SUPABASE_URL = (
+    "postgresql://postgres.karouthnsiuasrfsidvf:4_3a_uvUjdvv9WN"
+    "@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres?sslmode=require"
+)
+
+_db_url = os.getenv("DATABASE_URL") or _DEFAULT_SUPABASE_URL
+
 if _db_url:
     import dj_database_url
     DATABASES = {
@@ -122,6 +136,7 @@ else:
             'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
+
 
 
 
