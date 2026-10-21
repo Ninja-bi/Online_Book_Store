@@ -127,7 +127,7 @@ _db_url = os.getenv("DATABASE_URL") or _DEFAULT_SUPABASE_URL
 if _db_url:
     import dj_database_url
     DATABASES = {
-        'default': dj_database_url.parse(_db_url, conn_max_age=600, ssl_require=True)
+        'default': dj_database_url.parse(_db_url, conn_max_age=0, ssl_require=True)
     }
 else:
     DATABASES = {
