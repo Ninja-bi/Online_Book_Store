@@ -99,7 +99,7 @@
 
     <p class="switch-link">
       Already have an account?
-      <a href="{% url 'user-login' %}" class="link-bold">Sign in</a>
+      <a href="{% url 'user-login' %}{% if request.GET.next %}?next={{ request.GET.next|urlencode }}{% endif %}" class="link-bold">Sign in</a>
     </p>
   </div>
 </div>
@@ -172,8 +172,13 @@
       const data = await res.json();
 
       if (res.ok) {
-        showAlert('success', `Account created! Welcome, ${data.user.name}. Redirecting to login…`);
-        setTimeout(() => { window.location.href = "{% url 'user-login' %}"; }, 1500);
+        showAlert('success', `Account created! Welcome, ${data.user.name}. Redirecting…`);
+        const urlParams = new URLSearchParams(window.location.search);
+        let nextUrl = urlParams.get('next') || "{% url 'user-login' %}";
+        if (!nextUrl.startsWith('/') || nextUrl.startsWith('//')) {
+          nextUrl = "{% url 'user-login' %}";
+        }
+        setTimeout(() => { window.location.href = nextUrl; }, 1200);
       } else {
         const msgs = Object.entries(data).map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`).join(' | ');
         showAlert('error', msgs);

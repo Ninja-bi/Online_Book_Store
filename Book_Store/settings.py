@@ -10,11 +10,17 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.1/ref/settings/
 """
 
+import os
 from datetime import timedelta
 from pathlib import Path
+from dotenv import load_dotenv
+from django.urls import reverse_lazy
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Load environment variables from .env file
+load_dotenv(BASE_DIR / '.env')
 
 
 # Quick-start development settings - unsuitable for production
@@ -32,6 +38,12 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
+    # Unfold Admin theme (must precede django.contrib.admin)
+    'unfold',
+    'unfold.contrib.filters',
+    'unfold.contrib.forms',
+    'unfold.contrib.inlines',
+
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -45,6 +57,8 @@ INSTALLED_APPS = [
     # Local apps
     'user',
     'book',
+    'order',
+    'payment',
 ]
 
 MIDDLEWARE = [
@@ -169,5 +183,98 @@ MEDIA_ROOT = BASE_DIR / 'media'
 MAILERS = {
     'default': {
         'BACKEND': 'django.core.mail.backends.console.EmailBackend',
+    },
+}
+
+# Cashfree Payment Gateway Settings
+CASHFREE_CLIENT_ID = os.getenv("CASHFREE_CLIENT_ID", "").strip()
+CASHFREE_CLIENT_SECRET = os.getenv("CASHFREE_CLIENT_SECRET", "").strip()
+CASHFREE_ENV = os.getenv("CASHFREE_ENV", "sandbox").strip().lower()
+CASHFREE_API_VERSION = os.getenv("CASHFREE_API_VERSION", "2023-08-01").strip()
+CASHFREE_WEBHOOK_SECRET = os.getenv("CASHFREE_WEBHOOK_SECRET", CASHFREE_CLIENT_SECRET).strip()
+
+# Django Unfold Modern Admin Configuration
+UNFOLD = {
+    "SITE_TITLE": "NOOK Books Administration",
+    "SITE_HEADER": "NOOK Book Store",
+    "SITE_SUBHEADER": "Commerce & Catalog Management",
+    "THEME": "dark",
+    "SHOW_HISTORY": True,
+    "SHOW_VIEW_ON_SITE": True,
+    "STYLES": [
+        lambda request: "/static/css/admin_theme.css",
+    ],
+    "COLORS": {
+        "primary": {
+            "50": "oklch(98% .04 125)",
+            "100": "oklch(96% .08 126)",
+            "200": "oklch(94% .12 127)",
+            "300": "oklch(92% .17 128)",
+            "400": "oklch(89% .21 129)",
+            "500": "oklch(87% .23 130)",   # #c8f135 NOOK accent lime
+            "600": "oklch(82% .22 130)",
+            "700": "oklch(70% .18 130)",
+            "800": "oklch(55% .14 130)",
+            "900": "oklch(40% .10 130)",
+            "950": "oklch(25% .06 130)",
+        },
+    },
+    "DASHBOARD_CALLBACK": None,
+    "SIDEBAR": {
+        "show_search": True,
+        "show_all_applications": False,
+        "navigation": [
+            {
+                "title": "Catalog & Store",
+                "separator": True,
+                "collapsible": False,
+                "items": [
+                    {
+                        "title": "Books Catalog",
+                        "icon": "auto_stories",
+                        "link": lambda request: reverse_lazy("admin:book_book_changelist"),
+                    },
+                    {
+                        "title": "Shopping Carts",
+                        "icon": "shopping_cart",
+                        "link": lambda request: reverse_lazy("admin:book_cart_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": "Sales & Fulfillment",
+                "separator": True,
+                "collapsible": False,
+                "items": [
+                    {
+                        "title": "Orders",
+                        "icon": "receipt_long",
+                        "link": lambda request: reverse_lazy("admin:order_order_changelist"),
+                    },
+                    {
+                        "title": "Order Line Items",
+                        "icon": "inventory_2",
+                        "link": lambda request: reverse_lazy("admin:order_orderitem_changelist"),
+                    },
+                    {
+                        "title": "Payments & Gateway",
+                        "icon": "account_balance_wallet",
+                        "link": lambda request: reverse_lazy("admin:payment_payment_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": "User Management",
+                "separator": True,
+                "collapsible": False,
+                "items": [
+                    {
+                        "title": "Customers & Staff",
+                        "icon": "group",
+                        "link": lambda request: reverse_lazy("admin:user_user_changelist"),
+                    },
+                ],
+            },
+        ],
     },
 }

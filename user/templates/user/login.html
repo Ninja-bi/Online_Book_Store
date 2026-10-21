@@ -69,7 +69,7 @@
 
     <p class="switch-link">
       Don't have an account yet?
-      <a href="{% url 'user-register' %}" class="link-bold">Join the Society ↗</a>
+      <a href="{% url 'user-register' %}{% if request.GET.next %}?next={{ request.GET.next|urlencode }}{% endif %}" class="link-bold">Join the Society ↗</a>
     </p>
   </div>
 </div>
@@ -121,7 +121,12 @@
         localStorage.setItem('access',  data.tokens.access);
         localStorage.setItem('refresh', data.tokens.refresh);
         showAlert('success', `Welcome back, ${data.user.name}! Redirecting…`);
-        setTimeout(() => { window.location.href = '/'; }, 1200);
+        const urlParams = new URLSearchParams(window.location.search);
+        let nextUrl = urlParams.get('next') || '/';
+        if (!nextUrl.startsWith('/') || nextUrl.startsWith('//')) {
+          nextUrl = '/';
+        }
+        setTimeout(() => { window.location.href = nextUrl; }, 1200);
       } else {
         const msg = data.non_field_errors?.[0] || data.detail || 'Login failed. Please check your credentials.';
         showAlert('error', msg);

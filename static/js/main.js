@@ -108,5 +108,33 @@
         }
       });
     }
+
+    // User dropdown menu toggle
+    const userMenuBtn = document.getElementById('userMenuBtn');
+    const userMenuDropdown = document.querySelector('.user-menu-dropdown');
+
+    if (userMenuBtn && userMenuDropdown) {
+      userMenuBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        const isOpen = userMenuDropdown.classList.toggle('open');
+        userMenuBtn.setAttribute('aria-expanded', isOpen);
+      });
+
+      document.addEventListener('click', function (e) {
+        if (!userMenuDropdown.contains(e.target)) {
+          userMenuDropdown.classList.remove('open');
+          userMenuBtn.setAttribute('aria-expanded', 'false');
+        }
+      });
+    }
+
+    // Header logout button handler
+    const headerLogoutBtn = document.getElementById('headerLogoutBtn');
+    if (headerLogoutBtn) {
+      headerLogoutBtn.addEventListener('click', function () {
+        localStorage.removeItem('access');
+        localStorage.removeItem('refresh');
+      });
+    }
   });
 })();

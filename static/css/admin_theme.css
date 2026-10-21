@@ -1,0 +1,89 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   NOOK Books — Admin Custom Theme Stylesheet (Unfold Override)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --nook-bg: #f7f7f5;
+  --nook-surface: #ffffff;
+  --nook-surface-alt: #f0eee9;
+  --nook-text-primary: #111418;
+  --nook-text-secondary: #5c626b;
+  --nook-accent-lime: #c8f135;
+  --nook-accent-lime-hover: #b5e022;
+  --nook-accent-dark: #121417;
+  --nook-font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --nook-font-serif: 'Playfair Display', Georgia, serif;
+}
+
+/* Typography across Admin */
+body, input, button, select, textarea {
+  font-family: var(--nook-font-sans) !important;
+}
+
+/* Brand header & title font styling */
+.unfold-header,
+header h1,
+.site-title,
+#site-name a {
+  font-family: var(--nook-font-serif) !important;
+  letter-spacing: -0.02em;
+}
+
+/* Accent Lime Brand Badges & Buttons */
+.bg-primary-600,
+.bg-primary-500,
+button[type="submit"],
+.btn-primary,
+.submit-row input[type="submit"] {
+  background-color: var(--nook-accent-lime) !important;
+  color: #121417 !important;
+  font-weight: 700 !important;
+  border-radius: 9999px !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.bg-primary-600:hover,
+.bg-primary-500:hover,
+button[type="submit"]:hover,
+.btn-primary:hover,
+.submit-row input[type="submit"]:hover {
+  background-color: var(--nook-accent-lime-hover) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(200, 241, 53, 0.35) !important;
+}
+
+/* Sidebar Styling - Dark sanctuary aesthetic like NOOK */
+aside#nav-sidebar,
+.unfold-sidebar,
+nav[aria-label="Sidebar"] {
+  background-color: #121417 !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Active navigation item in sidebar */
+.unfold-sidebar a.active,
+.unfold-sidebar a[aria-current="page"] {
+  background-color: rgba(200, 241, 53, 0.14) !important;
+  color: var(--nook-accent-lime) !important;
+  border-left: 3px solid var(--nook-accent-lime) !important;
+  font-weight: 600 !important;
+}
+
+/* Table header & cards */
+.unfold-card,
+.unfold-table th {
+  letter-spacing: 0.02em;
+}
+
+/* Checkbox and focus states */
+input[type="checkbox"]:checked {
+  background-color: var(--nook-accent-dark) !important;
+  border-color: var(--nook-accent-dark) !important;
+}
+
+a:focus-visible, button:focus-visible, input:focus-visible {
+  outline: 2px solid var(--nook-accent-lime) !important;
+  outline-offset: 2px;
+}

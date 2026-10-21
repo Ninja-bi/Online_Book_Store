@@ -1,0 +1,120 @@
+{% extends "layout.html" %}
+{% load static %}
+
+{% block title %}{{ title }} — NOOK Books{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/checkout.css' %}" />
+<style>
+  .status-badge-pending {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #fef9c3;
+    color: #854d0e;
+    font-size: 0.82rem;
+    font-weight: 700;
+    padding: 6px 14px;
+    border-radius: 999px;
+    margin-bottom: 16px;
+  }
+  .status-badge-failed {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #fee2e2;
+    color: #991b1b;
+    font-size: 0.82rem;
+    font-weight: 700;
+    padding: 6px 14px;
+    border-radius: 999px;
+    margin-bottom: 16px;
+  }
+  .status-icon-pending {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: #fef08a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    color: #854d0e;
+  }
+  .status-icon-failed {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: #fecaca;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    color: #991b1b;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="confirm-page">
+  <div class="container">
+    <div class="confirm-card">
+
+      {% if status == "PENDING" %}
+        <div class="status-icon-pending">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+        </div>
+        <span class="status-badge-pending">⏳ Payment In Progress</span>
+        <h1 class="confirm-title">{{ title }}</h1>
+        <p class="confirm-sub">{{ message }}</p>
+
+        {% if order %}
+        <span class="confirm-order-num">Reference Order #{{ order.id }}</span>
+        <div style="background:var(--surface-alt);border-radius:var(--radius-md);padding:18px;text-align:left;margin-bottom:24px;border:1px solid var(--border-light);">
+          <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+            <span style="font-size:0.85rem;color:var(--text-muted);">Amount</span>
+            <span style="font-size:0.9rem;font-weight:700;color:var(--text-primary);">₹{{ order.total_payable }}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;">
+            <span style="font-size:0.85rem;color:var(--text-muted);">Payment Method</span>
+            <span style="font-size:0.85rem;font-weight:600;color:var(--text-primary);">{{ order.get_payment_method_display }}</span>
+          </div>
+        </div>
+        {% endif %}
+
+        <div class="confirm-actions">
+          <a href="{% url 'order-history' %}" class="btn-confirm-primary">Check Order History</a>
+          <a href="{% url 'cart' %}" class="btn-confirm-outline">Return to Cart</a>
+        </div>
+
+      {% else %}
+        <div class="status-icon-failed">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="15" y1="9" x2="9" y2="15"></line>
+            <line x1="9" y1="9" x2="15" y2="15"></line>
+          </svg>
+        </div>
+        <span class="status-badge-failed">Payment Incomplete</span>
+        <h1 class="confirm-title">{{ title }}</h1>
+        <p class="confirm-sub">{{ message }}</p>
+
+        {% if payment and payment.error_message %}
+        <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:20px;font-family:monospace;background:var(--surface-alt);padding:8px 12px;border-radius:6px;display:inline-block;">
+          {{ payment.error_message }}
+        </p>
+        {% endif %}
+
+        <div class="confirm-actions">
+          <a href="{% url 'checkout' %}" class="btn-confirm-primary">Retry Payment</a>
+          <a href="{% url 'cart' %}" class="btn-confirm-outline">Review Cart</a>
+        </div>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+{% endblock %}

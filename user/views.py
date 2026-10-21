@@ -2,11 +2,13 @@ from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import render
+from django.contrib.auth import login as django_login
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenRefreshView
 
 from .serializers import LoginSerializer, RegisterSerializer, UserProfileSerializer
+from book.cart_service import merge_session_cart_to_user
 
 
 class RegisterView(APIView):
@@ -29,7 +31,11 @@ class RegisterView(APIView):
     def post(self, request):
         serializer = RegisterSerializer(data=request.data, context={"request": request})
         if serializer.is_valid():
+            session_key = request.session.session_key
             user = serializer.save()
+            django_login(request, user)
+            if session_key:
+                merge_session_cart_to_user(session_key, user)
             return Response(
                 {
                     "message": "Account created successfully.",
@@ -66,6 +72,10 @@ class LoginView(APIView):
         if serializer.is_valid():
             data = serializer.validated_data
             user = data["user"]
+            session_key = request.session.session_key
+            django_login(request, user)
+            if session_key:
+                merge_session_cart_to_user(session_key, user)
             return Response(
                 {
                     "message": "Login successful.",

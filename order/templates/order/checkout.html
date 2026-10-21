@@ -1,0 +1,668 @@
+{% extends "layout.html" %}
+{% load static %}
+
+{% block title %}Checkout — NOOK Books{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/checkout.css' %}" />
+{% endblock %}
+
+{% block content %}
+<div class="checkout-page">
+  <div class="container">
+
+    <!-- Breadcrumb -->
+    <nav class="checkout-breadcrumb" aria-label="Breadcrumb">
+      <a href="{% url 'cart' %}" class="crumb">Cart</a>
+      <span class="sep">/</span>
+      <span class="crumb active">Checkout</span>
+      <span class="sep">/</span>
+      <span class="crumb">Confirmation</span>
+    </nav>
+
+    <!-- Step Progress -->
+    <div class="checkout-steps" role="list">
+      <div class="step-item completed" role="listitem">
+        <div class="step-num">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+        </div>
+        <div class="step-label">
+          <span class="step-sub">01</span>
+          <span class="step-title">Cart</span>
+        </div>
+      </div>
+
+      <div class="step-item active" role="listitem">
+        <div class="step-num">02</div>
+        <div class="step-label">
+          <span class="step-sub" style="color:#b5a800;">In Progress</span>
+          <span class="step-title">Shipping</span>
+        </div>
+      </div>
+
+      <div class="step-item" role="listitem">
+        <div class="step-num">03</div>
+        <div class="step-label">
+          <span class="step-sub">Upcoming</span>
+          <span class="step-title">Payment</span>
+        </div>
+      </div>
+
+      <div class="step-item" role="listitem">
+        <div class="step-num">04</div>
+        <div class="step-label">
+          <span class="step-sub">Final</span>
+          <span class="step-title">Review</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Checkout Form -->
+    <form method="POST" action="{% url 'place-order' %}" id="checkoutForm">
+      {% csrf_token %}
+
+      <div class="checkout-layout">
+
+        <!-- ── LEFT COLUMN ─────────────────────────────────────────────── -->
+        <div class="checkout-left">
+
+          <!-- Quick Payment Buttons -->
+          <div class="checkout-card">
+            <div class="payment-quick-btns">
+              <button type="button" class="pay-quick-btn primary" id="btnBhimUpi" onclick="selectPayment('upi')">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                  <line x1="1" y1="10" x2="23" y2="10"></line>
+                </svg>
+                BHIM / UPI →
+              </button>
+              <button type="button" class="pay-quick-btn outline" id="btnGpay" onclick="selectPayment('gpay')">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+                GPay
+              </button>
+              <button type="button" class="pay-quick-btn outline" id="btnPaytm" onclick="selectPayment('paytm')">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="5" width="20" height="14" rx="2"></rect>
+                  <line x1="2" y1="10" x2="22" y2="10"></line>
+                </svg>
+                Paytm / Wallets
+              </button>
+            </div>
+            <p class="pay-quick-divider" style="margin-top:14px;">OR CONTINUE WITH ADDRESS</p>
+          </div>
+
+          <!-- 1. Contact Information -->
+          <div class="checkout-card" id="section-contact">
+            <div class="checkout-card-header">
+              <div class="card-step-label">
+                <span class="card-step-num">1</span>
+                <span class="card-step-title">Contact Information</span>
+              </div>
+              <span class="card-step-meta" style="color:var(--text-muted);font-weight:500;">
+                Signed in as <strong style="color:var(--text-primary);">{{ user.email }}</strong>
+              </span>
+            </div>
+
+            <div class="form-group">
+              <label for="id_email">Email Address for Confirmation &amp; Tracking</label>
+              <input
+                type="email"
+                id="id_email"
+                name="email"
+                class="form-input has-check"
+                value="{{ prefill.email|default:'' }}"
+                placeholder="you@example.com"
+                required
+              />
+            </div>
+          </div>
+
+          <!-- 2. Shipping Address -->
+          <div class="checkout-card" id="section-shipping">
+            <div class="checkout-card-header">
+              <div class="card-step-label">
+                <span class="card-step-num">2</span>
+                <span class="card-step-title">Shipping Address</span>
+              </div>
+            </div>
+
+            <!-- Name Row -->
+            <div class="form-row" style="margin-bottom:14px;">
+              <div class="form-group">
+                <label for="id_first_name">First Name</label>
+                <input type="text" id="id_first_name" name="first_name" class="form-input"
+                  value="{{ prefill.first_name|default:'' }}" placeholder="First name" required />
+              </div>
+              <div class="form-group">
+                <label for="id_last_name">Last Name</label>
+                <input type="text" id="id_last_name" name="last_name" class="form-input"
+                  value="{{ prefill.last_name|default:'' }}" placeholder="Last name" required />
+              </div>
+            </div>
+
+            <!-- Street Address -->
+            <div class="form-row single" style="margin-bottom:14px;">
+              <div class="form-group">
+                <label for="id_street_address">Street Address &amp; House / Flat No.</label>
+                <input type="text" id="id_street_address" name="street_address" class="form-input"
+                  placeholder="42 Reader's Lane, Apt 301, 3rd Floor" required />
+              </div>
+            </div>
+
+            <!-- PIN / City / State -->
+            <div class="form-row triple" style="margin-bottom:14px;">
+              <div class="form-group">
+                <label for="id_pin_code">PIN Code</label>
+                <input type="text" id="id_pin_code" name="pin_code" class="form-input"
+                  placeholder="560038" maxlength="10" required />
+              </div>
+              <div class="form-group">
+                <label for="id_city">City</label>
+                <input type="text" id="id_city" name="city" class="form-input"
+                  placeholder="Bengaluru" required />
+              </div>
+              <div class="form-group">
+                <label for="id_state">State</label>
+                <div class="form-select-wrap">
+                  <select id="id_state" name="state" class="form-select" required>
+                    <option value="">Select State</option>
+                    <option value="Andhra Pradesh">Andhra Pradesh</option>
+                    <option value="Assam">Assam</option>
+                    <option value="Bihar">Bihar</option>
+                    <option value="Delhi">Delhi</option>
+                    <option value="Goa">Goa</option>
+                    <option value="Gujarat">Gujarat</option>
+                    <option value="Haryana">Haryana</option>
+                    <option value="Karnataka">Karnataka</option>
+                    <option value="Kerala">Kerala</option>
+                    <option value="Madhya Pradesh">Madhya Pradesh</option>
+                    <option value="Maharashtra">Maharashtra</option>
+                    <option value="Punjab">Punjab</option>
+                    <option value="Rajasthan">Rajasthan</option>
+                    <option value="Tamil Nadu">Tamil Nadu</option>
+                    <option value="Telangana">Telangana</option>
+                    <option value="Uttar Pradesh">Uttar Pradesh</option>
+                    <option value="West Bengal">West Bengal</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Phone / Landmark -->
+            <div class="form-row" style="margin-bottom:6px;">
+              <div class="form-group">
+                <label for="id_phone">Phone Number for Delivery Updates</label>
+                <div class="phone-input-group">
+                  <span class="phone-prefix">+91</span>
+                  <input type="tel" id="id_phone" name="phone" class="form-input"
+                    placeholder="9845012890" maxlength="10" />
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="id_landmark">Landmark / Delivery Instructions <em style="font-weight:400;color:var(--text-muted)">(Optional)</em></label>
+                <input type="text" id="id_landmark" name="landmark" class="form-input"
+                  placeholder="Near 12th Main Coffee House" />
+              </div>
+            </div>
+
+            <button type="button" class="add-address-btn" id="addAddressBtn">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              New Address
+            </button>
+          </div>
+
+          <!-- 4. Payment Method -->
+          <div class="checkout-card" id="section-payment">
+            <div class="checkout-card-header">
+              <div class="card-step-label">
+                <span class="card-step-num">4</span>
+                <span class="card-step-title">Payment Method</span>
+              </div>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              </svg>
+            </div>
+
+            <input type="hidden" name="payment_method" id="selectedPaymentMethod" value="upi" />
+
+            <div class="payment-options">
+
+              <!-- UPI -->
+              <div class="payment-option-card selected" id="payOpt-upi" data-method="upi">
+                <div class="payment-option-header" onclick="selectPayment('upi')">
+                  <div class="payment-option-left">
+                    <input type="radio" name="_pay_radio" id="radio_upi" value="upi" checked />
+                    <div class="payment-option-info">
+                      <span class="payment-option-name">UPI Instant Transfer</span>
+                      <span class="payment-option-sub">Google Pay, PhonePe, Paytm, CRED or any Virtual Payment Address</span>
+                    </div>
+                  </div>
+                  <div class="payment-option-right">
+                    <span class="badge-zero-fee">Zero Extra Fee</span>
+                    <span class="payment-logo-badge">UPI</span>
+                  </div>
+                </div>
+                <div class="payment-option-body">
+                  <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:8px;">Enter Virtual Payment Address (VPA / UPI ID)</p>
+                  <div class="upi-verify-row">
+                    <div class="upi-input-wrap">
+                      <input type="text" class="form-input" id="id_upi_id" name="payment_reference"
+                        placeholder="username" style="border:none;background:transparent;" />
+                      <span class="upi-at-suffix">@upi</span>
+                    </div>
+                    <button type="button" class="btn-verify" id="verifyUpiBtn">Verify &amp; Link</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Credit / Debit Card -->
+              <div class="payment-option-card" id="payOpt-credit_card" data-method="credit_card">
+                <div class="payment-option-header" onclick="selectPayment('credit_card')">
+                  <div class="payment-option-left">
+                    <input type="radio" name="_pay_radio" id="radio_credit_card" value="credit_card" />
+                    <div class="payment-option-info">
+                      <span class="payment-option-name">Credit / Debit Card</span>
+                      <span class="payment-option-sub">Visa, MasterCard, RuPay, American Express</span>
+                    </div>
+                  </div>
+                  <div class="payment-option-right">
+                    <span class="payment-logo-badge">VISA</span>
+                    <span class="payment-logo-badge">MC</span>
+                    <span class="payment-logo-badge">RuPay</span>
+                  </div>
+                </div>
+                <div class="payment-option-body">
+                  <div class="form-row" style="margin-top:12px;margin-bottom:12px;">
+                    <div class="form-group" style="grid-column:1/-1;">
+                      <label for="id_card_num">Card Number</label>
+                      <input type="text" id="id_card_num" class="form-input" placeholder="1234 5678 9012 3456" maxlength="19" />
+                    </div>
+                  </div>
+                  <div class="form-row triple">
+                    <div class="form-group" style="grid-column:span 2;">
+                      <label for="id_card_expiry">Expiry (MM / YY)</label>
+                      <input type="text" id="id_card_expiry" class="form-input" placeholder="MM / YY" maxlength="7" />
+                    </div>
+                    <div class="form-group">
+                      <label for="id_card_cvv">CVV</label>
+                      <input type="password" id="id_card_cvv" class="form-input" placeholder="•••" maxlength="4" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Net Banking -->
+              <div class="payment-option-card" id="payOpt-net_banking" data-method="net_banking">
+                <div class="payment-option-header" onclick="selectPayment('net_banking')">
+                  <div class="payment-option-left">
+                    <input type="radio" name="_pay_radio" id="radio_net_banking" value="net_banking" />
+                    <div class="payment-option-info">
+                      <span class="payment-option-name">Net Banking</span>
+                      <span class="payment-option-sub">Over 45+ Indian Scheduled Banks supported</span>
+                    </div>
+                  </div>
+                  <div class="payment-option-right">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                      <line x1="3" y1="22" x2="21" y2="22"></line>
+                      <line x1="6" y1="18" x2="6" y2="11"></line>
+                      <line x1="10" y1="18" x2="10" y2="11"></line>
+                      <line x1="14" y1="18" x2="14" y2="11"></line>
+                      <line x1="18" y1="18" x2="18" y2="11"></line>
+                      <polygon points="12 2 20 7 4 7"></polygon>
+                    </svg>
+                  </div>
+                </div>
+                <div class="payment-option-body">
+                  <div class="form-group" style="margin-top:12px;">
+                    <label for="id_bank_select">Select Your Bank</label>
+                    <div class="form-select-wrap">
+                      <select id="id_bank_select" class="form-select">
+                        <option value="">Choose a bank…</option>
+                        <option>State Bank of India</option>
+                        <option>HDFC Bank</option>
+                        <option>ICICI Bank</option>
+                        <option>Axis Bank</option>
+                        <option>Kotak Mahindra Bank</option>
+                        <option>Punjab National Bank</option>
+                        <option>Bank of Baroda</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- COD -->
+              <div class="payment-option-card" id="payOpt-cod" data-method="cod">
+                <div class="payment-option-header" onclick="selectPayment('cod')">
+                  <div class="payment-option-left">
+                    <input type="radio" name="_pay_radio" id="radio_cod" value="cod" />
+                    <div class="payment-option-info">
+                      <span class="payment-option-name">Cash on Delivery (COD)
+                        <span style="font-size:0.72rem;color:var(--text-muted);font-weight:500;"> +₹40 handling</span>
+                      </span>
+                      <span class="payment-option-sub">Pay in cash or scan delivery partner's UPI QR at your doorstep</span>
+                    </div>
+                  </div>
+                  <div class="payment-option-right">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                      <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+            </div><!-- /payment-options -->
+
+            <!-- Billing Address Checkbox -->
+            <label class="billing-check-row" for="id_billing_same">
+              <input type="checkbox" id="id_billing_same" checked />
+              Billing address matches shipping address
+            </label>
+
+          </div><!-- /payment card -->
+
+        </div><!-- /checkout-left -->
+
+        <!-- ── RIGHT COLUMN: Order Summary ────────────────────────────── -->
+        <aside class="order-summary-card" aria-label="Order Summary">
+
+          <div class="summary-header">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span class="summary-title">Order Summary</span>
+              <span class="summary-count">{{ cart.total_items }} item{{ cart.total_items|pluralize }}</span>
+            </div>
+            <a href="{% url 'cart' %}" class="edit-cart-link">Edit Cart</a>
+          </div>
+
+          <!-- Items -->
+          <div class="summary-items">
+            {% for item in cart.items.all %}
+            <div class="summary-item">
+              <div class="summary-item-img-wrap">
+                {% if item.book.cover_image %}
+                  <img src="{{ item.book.cover_image.url }}" alt="{{ item.book.title }}" class="summary-item-img" />
+                {% else %}
+                  <div class="summary-item-img-placeholder">📖</div>
+                {% endif %}
+                {% if item.quantity > 1 %}
+                  <span class="summary-item-qty-badge">{{ item.quantity }}</span>
+                {% endif %}
+              </div>
+
+              <div class="summary-item-details">
+                <p class="summary-item-title">{{ item.book.title }}</p>
+                <p class="summary-item-author">{{ item.book.author }}</p>
+                <div style="display:flex;align-items:center;gap:6px;margin-top:4px;">
+                  <span class="summary-item-format">{{ item.book.format }}</span>
+                  {% if item.book.discount_percentage > 0 %}
+                    <span class="summary-item-discount">{{ item.book.discount_percentage }}% OFF</span>
+                  {% endif %}
+                </div>
+              </div>
+
+              <div class="summary-item-price-col">
+                <span class="summary-item-price">₹{{ item.subtotal }}</span>
+                {% if item.book.original_price %}
+                  <span class="summary-item-original">₹{{ item.book.original_price }}</span>
+                {% endif %}
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+
+          <!-- Pricing Breakdown -->
+          <div class="pricing-rows">
+            <div class="pricing-row">
+              <span class="pricing-row-label">Subtotal (Retail value)</span>
+              <span class="pricing-row-value">₹{{ cart.original_total }}</span>
+            </div>
+            {% if cart.discount > 0 %}
+            <div class="pricing-row voucher-row">
+              <span class="pricing-row-label">Special Reader Voucher</span>
+              <span class="pricing-row-value discount">−₹{{ cart.discount }}</span>
+            </div>
+            {% endif %}
+            <div class="pricing-row">
+              <span class="pricing-row-label">Standard Courier Delivery
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-left:3px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+              </span>
+              <span class="pricing-row-value free">FREE</span>
+            </div>
+            <div class="pricing-row">
+              <span class="pricing-row-label">Estimated GST &amp; Publication Cess</span>
+              <span class="pricing-row-value" style="color:var(--text-muted);">Included (5%)</span>
+            </div>
+          </div>
+
+          <hr class="pricing-divider" />
+
+          <div class="total-row">
+            <span class="total-label">Total Payable</span>
+            <div style="text-align:right;">
+              <div class="total-amount">₹{{ cart.total_payable }}</div>
+            </div>
+          </div>
+          {% if cart.total_savings > 0 %}
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
+            <span class="total-savings-badge">You Save ₹{{ cart.total_savings }}</span>
+            <span class="total-tax-note">All Indian taxes inclusive</span>
+          </div>
+          {% endif %}
+
+          <!-- Error Banner -->
+          <div id="paymentErrorAlert" style="display:none;margin-bottom:12px;padding:12px 14px;background:#fef2f2;border:1px solid #f87171;color:#b91c1c;border-radius:8px;font-size:0.85rem;line-height:1.4;"></div>
+
+          <!-- CTA -->
+          <button type="submit" class="btn-pay-cta" id="paySubmitBtn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+              <line x1="1" y1="10" x2="23" y2="10"></line>
+            </svg>
+            <span id="payBtnLabel">Pay ₹{{ cart.total_payable }} via Cashfree →</span>
+          </button>
+
+          <p class="pay-trust-note">
+            🔒 Secured by Cashfree Payments. 128-bit SSL Encryption.
+          </p>
+
+        </aside>
+
+      </div><!-- /checkout-layout -->
+    </form>
+
+  </div><!-- /container -->
+</div>
+
+<!-- ── Footer note override for checkout ──────────────────────────────── -->
+{% endblock %}
+
+{% block extra_js %}
+<!-- Cashfree Web Checkout JS SDK -->
+<script src="https://sdk.cashfree.com/js/v3/cashfree.js"></script>
+<style>
+  @keyframes spin { 100% { transform: rotate(360deg); } }
+  .spin-icon { animation: spin 0.9s linear infinite; display: inline-block; vertical-align: middle; }
+</style>
+<script>
+  // ── Payment Method Selection ────────────────────────────────────────────
+  function selectPayment(method) {
+    document.querySelectorAll('.payment-option-card').forEach(card => {
+      card.classList.remove('selected');
+    });
+    document.querySelectorAll('[name="_pay_radio"]').forEach(r => r.checked = false);
+
+    const card = document.getElementById('payOpt-' + method);
+    const radio = document.getElementById('radio_' + method);
+    if (card) card.classList.add('selected');
+    if (radio) radio.checked = true;
+    document.getElementById('selectedPaymentMethod').value = method;
+
+    const btnLabel = document.getElementById('payBtnLabel');
+    if (btnLabel) {
+      if (method === 'cod') {
+        btnLabel.textContent = 'Place Order (Cash on Delivery) →';
+      } else {
+        btnLabel.textContent = 'Pay ₹{{ cart.total_payable }} via Cashfree →';
+      }
+    }
+  }
+
+  // ── UPI verify button ───────────────────────────────────────────────────
+  document.getElementById('verifyUpiBtn').addEventListener('click', function () {
+    const upiId = document.getElementById('id_upi_id').value.trim();
+    if (!upiId) {
+      this.textContent = 'Enter UPI ID';
+      return;
+    }
+    this.textContent = 'Verifying…';
+    this.disabled = true;
+    setTimeout(() => {
+      this.textContent = '✓ Linked';
+      this.style.background = '#16a34a';
+    }, 1200);
+  });
+
+  // ── Card number formatting ──────────────────────────────────────────────
+  const cardNumInput = document.getElementById('id_card_num');
+  if (cardNumInput) {
+    cardNumInput.addEventListener('input', function () {
+      let val = this.value.replace(/\D/g, '').substring(0, 16);
+      this.value = val.replace(/(.{4})/g, '$1 ').trim();
+    });
+  }
+
+  // ── Expiry formatting ───────────────────────────────────────────────────
+  const expiryInput = document.getElementById('id_card_expiry');
+  if (expiryInput) {
+    expiryInput.addEventListener('input', function () {
+      let val = this.value.replace(/\D/g, '').substring(0, 4);
+      if (val.length >= 3) val = val.substring(0, 2) + ' / ' + val.substring(2);
+      this.value = val;
+    });
+  }
+
+  // ── PIN Code auto-fill hint ─────────────────────────────────────────────
+  document.getElementById('id_pin_code').addEventListener('input', function () {
+    if (this.value.length === 6) {
+      this.classList.add('has-check');
+    } else {
+      this.classList.remove('has-check');
+    }
+  });
+
+  // ── Cashfree Payment Integration Form Submission ─────────────────────────
+  const checkoutForm = document.getElementById('checkoutForm');
+  const payBtn = document.getElementById('paySubmitBtn');
+  const errorAlert = document.getElementById('paymentErrorAlert');
+
+  checkoutForm.addEventListener('submit', async function (e) {
+    const selectedMethod = document.getElementById('selectedPaymentMethod').value;
+
+    // Cash on Delivery follows standard Django POST form submission
+    if (selectedMethod === 'cod') {
+      return true;
+    }
+
+    // Online Payments (UPI, Cards, Net Banking, GPay, Paytm) use Cashfree
+    e.preventDefault();
+
+    if (!checkoutForm.checkValidity()) {
+      checkoutForm.reportValidity();
+      return;
+    }
+
+    if (errorAlert) {
+      errorAlert.style.display = 'none';
+      errorAlert.textContent = '';
+    }
+
+    const originalBtnHtml = payBtn.innerHTML;
+    payBtn.disabled = true;
+    payBtn.innerHTML = `
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="spin-icon" style="margin-right:6px;">
+        <circle cx="12" cy="12" r="10" stroke-opacity="0.25"></circle>
+        <path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"></path>
+      </svg>
+      Initiating Cashfree Payment...
+    `;
+
+    try {
+      const formData = new FormData(checkoutForm);
+      const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+      const response = await fetch("{% url 'payment-initiate' %}", {
+        method: "POST",
+        headers: {
+          "X-CSRFToken": csrfToken,
+        },
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (response.status === 401 || data.require_login) {
+        window.location.href = "{% url 'user-login' %}?next=" + encodeURIComponent(window.location.pathname);
+        return;
+      }
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || "Failed to initiate payment. Please try again.");
+      }
+
+      if (typeof Cashfree !== 'function') {
+        throw new Error("Cashfree Checkout SDK could not be loaded. Please check your connection and refresh.");
+      }
+
+      // Initialize Cashfree Web Checkout SDK
+      const cashfree = Cashfree({
+        mode: data.environment === "production" ? "production" : "sandbox",
+      });
+
+      // Redirect to Cashfree Checkout
+      const checkoutRes = cashfree.checkout({
+        paymentSessionId: data.payment_session_id,
+        redirectTarget: "_self",
+      });
+
+      if (checkoutRes && typeof checkoutRes.then === 'function') {
+        checkoutRes.then(function (res) {
+          if (res && res.error) {
+            throw new Error(res.error.message || "Payment checkout error.");
+          }
+        }).catch(function (cfErr) {
+          console.error("Cashfree Checkout Error:", cfErr);
+          payBtn.disabled = false;
+          payBtn.innerHTML = originalBtnHtml;
+          if (errorAlert) {
+            errorAlert.textContent = cfErr.message || "Failed to launch Cashfree checkout.";
+            errorAlert.style.display = "block";
+          }
+        });
+      }
+
+    } catch (err) {
+      console.error("Cashfree Checkout Error:", err);
+      payBtn.disabled = false;
+      payBtn.innerHTML = originalBtnHtml;
+
+      if (errorAlert) {
+        errorAlert.textContent = err.message || "An error occurred while connecting to the payment gateway.";
+        errorAlert.style.display = "block";
+        errorAlert.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      } else {
+        alert(err.message || "Payment initiation failed.");
+      }
+    }
+  });
+</script>
+
+{% endblock %}

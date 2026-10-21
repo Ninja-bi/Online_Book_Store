@@ -1,0 +1,347 @@
+{% extends "layout.html" %}
+{% load static %}
+
+{% block title %}Order #{{ order.id }} Confirmed — NOOK Books{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/checkout.css' %}" />
+<style>
+  .confirm-receipt-card {
+    background: var(--surface);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    padding: 40px;
+    max-width: 680px;
+    width: 100%;
+    margin: 0 auto;
+    box-shadow: var(--shadow-md);
+  }
+
+  .order-items-list {
+    margin: 24px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    text-align: left;
+  }
+
+  .order-item-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 14px;
+    background: var(--surface-alt);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    transition: transform var(--transition);
+  }
+
+  .order-item-img {
+    width: 60px;
+    height: 84px;
+    object-fit: cover;
+    border-radius: 6px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    flex-shrink: 0;
+  }
+
+  .order-item-placeholder {
+    width: 60px;
+    height: 84px;
+    background: #e5e7eb;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+  }
+
+  .order-item-details {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .order-item-title {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+    margin: 0 0 4px;
+    line-height: 1.3;
+  }
+
+  .order-item-meta {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .order-item-badge {
+    background: #e0f2fe;
+    color: #0369a1;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+
+  .order-item-price-col {
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  .order-item-total {
+    font-weight: 800;
+    font-size: 1.05rem;
+    color: var(--text-primary);
+  }
+
+  .order-item-qty-note {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  .receipt-meta-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    background: var(--surface-alt);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    text-align: left;
+    margin-bottom: 24px;
+  }
+
+  .receipt-meta-label {
+    font-size: 0.76rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+    font-weight: 600;
+  }
+
+  .receipt-meta-val {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.4;
+  }
+
+  .pricing-summary-box {
+    background: var(--surface);
+    border: 1px dashed var(--border-light);
+    border-radius: var(--radius-md);
+    padding: 16px 20px;
+    margin-bottom: 28px;
+    text-align: left;
+  }
+
+  .pricing-summary-line {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+  }
+
+  .pricing-summary-line.total-line {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-light);
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--text-primary);
+  }
+
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 999px;
+  }
+
+  .status-pill.success {
+    background: #dcfce7;
+    color: #166534;
+  }
+
+  .status-pill.pending {
+    background: #fef9c3;
+    color: #854d0e;
+  }
+
+  @media (max-width: 600px) {
+    .confirm-receipt-card { padding: 24px 16px; }
+    .receipt-meta-grid { grid-template-columns: 1fr; gap: 12px; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="confirm-page">
+  <div class="container">
+    <div class="confirm-receipt-card">
+
+      <!-- Success Icon -->
+      <div class="confirm-icon">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#121417" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+      </div>
+
+      <h1 class="confirm-title">Order Confirmed!</h1>
+      <p class="confirm-sub">
+        Thank you, <strong>{{ order.full_name }}</strong>! Your order has been placed successfully.<br />
+        A confirmation dispatch has been logged for <strong>{{ order.email }}</strong>.
+      </p>
+
+      <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:24px;">
+        <span class="confirm-order-num" style="margin-bottom:0;">Order #{{ order.id }}</span>
+        {% if order.is_paid %}
+          <span class="status-pill success">✓ Paid Online</span>
+        {% elif order.payment_method == 'cod' %}
+          <span class="status-pill pending">⏳ Cash on Delivery</span>
+        {% else %}
+          <span class="status-pill pending">⏳ Payment {{ order.status|title }}</span>
+        {% endif %}
+      </div>
+
+      <!-- ── Ordered Items List ──────────────────────────────────────── -->
+      <div style="text-align:left;margin-bottom:8px;">
+        <h2 style="font-size:1.05rem;font-weight:700;color:var(--text-primary);margin:0 0 4px;">
+          Ordered Items ({{ order.total_items }} item{{ order.total_items|pluralize }})
+        </h2>
+        <p style="font-size:0.8rem;color:var(--text-muted);margin:0;">Books included in this order</p>
+      </div>
+
+      <div class="order-items-list">
+        {% for item in order.items.all %}
+          <div class="order-item-row">
+            <!-- Cover image -->
+            {% if item.cover_image %}
+              <img src="{{ item.cover_image.url }}" alt="{{ item.title }}" class="order-item-img" />
+            {% elif item.book and item.book.cover_image %}
+              <img src="{{ item.book.cover_image.url }}" alt="{{ item.title }}" class="order-item-img" />
+            {% else %}
+              <div class="order-item-placeholder">📖</div>
+            {% endif %}
+
+            <!-- Details -->
+            <div class="order-item-details">
+              <h3 class="order-item-title">
+                {% if item.book %}
+                  <a href="{% url 'book-detail-page' item.book.id %}" style="color:inherit;text-decoration:none;">
+                    {{ item.title }}
+                  </a>
+                {% else %}
+                  {{ item.title }}
+                {% endif %}
+              </h3>
+              <div class="order-item-meta">
+                <span>By {{ item.author }}</span>
+                <span>•</span>
+                <span class="order-item-badge">{{ item.book_format }}</span>
+                {% if item.discount_percentage > 0 %}
+                  <span style="color:#16a34a;font-weight:700;">{{ item.discount_percentage }}% OFF</span>
+                {% endif %}
+              </div>
+            </div>
+
+            <!-- Price & Quantity -->
+            <div class="order-item-price-col">
+              <div class="order-item-total">₹{{ item.subtotal }}</div>
+              <div class="order-item-qty-note">{{ item.quantity }} × ₹{{ item.unit_price }}</div>
+            </div>
+          </div>
+        {% empty %}
+          <p style="text-align:center;color:var(--text-muted);padding:16px;">No item details available.</p>
+        {% endfor %}
+      </div>
+
+      <!-- ── Shipping & Payment Info Grid ────────────────────────────── -->
+      <div class="receipt-meta-grid">
+        <div>
+          <div class="receipt-meta-label">Shipping Address</div>
+          <div class="receipt-meta-val">
+            <strong>{{ order.full_name }}</strong><br />
+            {{ order.street_address }}<br />
+            {% if order.landmark %}{{ order.landmark }}<br />{% endif %}
+            {{ order.city }}, {{ order.state }} — {{ order.pin_code }}<br />
+            {% if order.phone %}<span style="color:var(--text-muted);font-size:0.8rem;">📞 +91 {{ order.phone }}</span>{% endif %}
+          </div>
+        </div>
+
+        <div>
+          <div class="receipt-meta-label">Payment &amp; Delivery</div>
+          <div class="receipt-meta-val">
+            <strong>Method:</strong> {{ order.get_payment_method_display }}<br />
+            <strong>Status:</strong>
+            {% if order.is_paid %}
+              <span style="color:#16a34a;font-weight:700;">Paid</span>
+            {% else %}
+              <span style="color:#d97706;font-weight:700;">Pending Confirmation</span>
+            {% endif %}<br />
+            {% if order.payment_reference %}
+              <strong>Reference:</strong> <span style="font-family:monospace;font-size:0.8rem;">{{ order.payment_reference }}</span><br />
+            {% endif %}
+            <strong>Estimated Delivery:</strong> 3–5 Business Days
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Pricing Summary Box ────────────────────────────────────── -->
+      <div class="pricing-summary-box">
+        <div class="pricing-summary-line">
+          <span>Subtotal</span>
+          <span>₹{{ order.subtotal }}</span>
+        </div>
+        {% if order.discount > 0 %}
+        <div class="pricing-summary-line" style="color:#16a34a;">
+          <span>Reader Voucher Discount</span>
+          <span>−₹{{ order.discount }}</span>
+        </div>
+        {% endif %}
+        <div class="pricing-summary-line">
+          <span>Standard Delivery</span>
+          <span style="color:#16a34a;font-weight:600;">FREE</span>
+        </div>
+        <div class="pricing-summary-line">
+          <span>Estimated Taxes &amp; GST (5%)</span>
+          <span>Included</span>
+        </div>
+        <div class="pricing-summary-line total-line">
+          <span>Total Paid</span>
+          <span>₹{{ order.total_payable }}</span>
+        </div>
+      </div>
+
+      <!-- ── Actions ────────────────────────────────────────────────── -->
+      <div class="confirm-actions">
+        <a href="{% url 'order-history' %}" class="btn-confirm-primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+            <polyline points="10 9 9 9 8 9"></polyline>
+          </svg>
+          View My Orders
+        </a>
+        <a href="{% url 'book-catalog' %}" class="btn-confirm-outline">
+          Continue Shopping →
+        </a>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

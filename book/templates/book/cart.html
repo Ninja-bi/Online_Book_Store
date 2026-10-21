@@ -16,14 +16,14 @@
       <span class="step-number">01</span>
       <span>Cart</span>
     </div>
-    <div class="step-item">
+    <a href="{% url 'checkout' %}" class="step-item" style="text-decoration:none;color:inherit;">
       <span class="step-number">02</span>
       <span>Shipping</span>
-    </div>
-    <div class="step-item">
+    </a>
+    <a href="{% url 'checkout' %}" class="step-item" style="text-decoration:none;color:inherit;">
       <span class="step-number">03</span>
       <span>Payment</span>
-    </div>
+    </a>
     <div class="step-item">
       <span class="step-number">04</span>
       <span>Review</span>
@@ -240,17 +240,18 @@
           </div>
         </div>
 
-        <button
-          type="button"
+        <a
+          href="{% url 'checkout' %}"
           class="btn-checkout"
           id="btnProceedCheckout"
+          style="text-decoration:none;"
         >
           <span>Proceed to Checkout</span>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <line x1="5" y1="12" x2="19" y2="12"></line>
             <polyline points="12 5 19 12 12 19"></polyline>
           </svg>
-        </button>
+        </a>
       </div>
     </div>
 
@@ -402,8 +403,13 @@
     // Proceed to checkout button
     const btnCheckout = document.getElementById('btnProceedCheckout');
     if (btnCheckout) {
-      btnCheckout.addEventListener('click', function () {
-        window.showToast('Proceeding to Shipping &amp; Payment...');
+      btnCheckout.addEventListener('click', function (e) {
+        const items = document.querySelectorAll('.cart-item-card');
+        if (!items || items.length === 0) {
+          e.preventDefault();
+          window.showToast('Your cart is empty. Please add books to cart first.');
+          return false;
+        }
       });
     }
   });

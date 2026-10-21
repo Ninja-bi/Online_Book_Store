@@ -1,10 +1,11 @@
 from django.contrib import admin
+from unfold.admin import ModelAdmin, TabularInline
 from .models import Book, Cart, CartItem
 
 
 @admin.register(Book)
-class BookAdmin(admin.ModelAdmin):
-    """Admin configuration for the Book model."""
+class BookAdmin(ModelAdmin):
+    """Modern Unfold Admin configuration for the Book model."""
 
     list_display  = [
         "title", "author", "category", "price", "original_price",
@@ -36,14 +37,15 @@ class BookAdmin(admin.ModelAdmin):
     )
 
 
-class CartItemInline(admin.TabularInline):
+class CartItemInline(TabularInline):
     model = CartItem
     extra = 0
     raw_id_fields = ["book"]
 
 
 @admin.register(Cart)
-class CartAdmin(admin.ModelAdmin):
+class CartAdmin(ModelAdmin):
     list_display = ["id", "user", "session_key", "total_items", "subtotal", "updated_at"]
     inlines = [CartItemInline]
     readonly_fields = ["created_at", "updated_at"]
+

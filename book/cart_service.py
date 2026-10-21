@@ -68,3 +68,35 @@ def update_cart_quantity(cart, book_id, quantity):
 def remove_from_cart(cart, book_id):
     """Removes an item from the cart."""
     CartItem.objects.filter(cart=cart, book_id=book_id).delete()
+
+
+def merge_session_cart_to_user(session_key, user):
+    """
+    Merges items from an anonymous session cart into the authenticated user's cart.
+    Prevents loss of cart items when a guest user is redirected to sign in to place an order.
+    """
+    if not session_key or not user or not user.is_authenticated:
+        return
+
+    session_cart = Cart.objects.filter(session_key=session_key).first()
+    if not session_cart or not session_cart.items.exists():
+        return
+
+    user_cart, _ = Cart.objects.get_or_create(user=user)
+
+    for s_item in session_cart.items.all():
+        u_item, created = CartItem.objects.get_or_create(
+            cart=user_cart,
+            book=s_item.book,
+            defaults={"quantity": s_item.quantity},
+        )
+        if not created:
+            new_qty = u_item.quantity + s_item.quantity
+            if s_item.book.stock and new_qty > s_item.book.stock:
+                new_qty = s_item.book.stock
+            u_item.quantity = new_qty
+            u_item.save()
+
+    # Clean up the session cart
+    session_cart.delete()
+

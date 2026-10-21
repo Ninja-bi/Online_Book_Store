@@ -1,0 +1,522 @@
+{% extends "layout.html" %}
+{% load static %}
+
+{% block title %}My Orders — NOOK Books{% endblock %}
+
+{% block extra_css %}
+<style>
+  .orders-page {
+    background: var(--bg);
+    min-height: 80vh;
+    padding: 32px 0 64px;
+  }
+
+  .orders-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+  }
+  .orders-breadcrumb a {
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color var(--transition);
+  }
+  .orders-breadcrumb a:hover { color: var(--text-primary); }
+  .orders-breadcrumb .sep { opacity: 0.4; }
+  .orders-breadcrumb .active { color: var(--text-primary); font-weight: 600; }
+
+  .orders-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+    gap: 16px;
+    border-bottom: 1px solid var(--border-light);
+    padding-bottom: 20px;
+  }
+
+  .orders-title {
+    font-family: var(--font-serif);
+    font-size: 2.2rem;
+    color: var(--text-primary);
+    margin: 0 0 6px;
+  }
+
+  .orders-subtitle {
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    margin: 0;
+  }
+
+  .orders-count-badge {
+    background: var(--surface-alt);
+    border: 1px solid var(--border-light);
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    font-weight: 700;
+    padding: 6px 16px;
+    border-radius: var(--radius-pill);
+  }
+
+  /* Empty State */
+  .orders-empty-card {
+    background: var(--surface);
+    border: 1px dashed var(--border-light);
+    border-radius: var(--radius-lg);
+    padding: 64px 24px;
+    text-align: center;
+    max-width: 520px;
+    margin: 40px auto;
+  }
+
+  .empty-icon-wrap {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: var(--surface-alt);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    color: var(--text-muted);
+  }
+
+  .empty-title {
+    font-family: var(--font-serif);
+    font-size: 1.6rem;
+    color: var(--text-primary);
+    margin: 0 0 8px;
+  }
+
+  .empty-sub {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin: 0 0 24px;
+  }
+
+  /* Order Cards */
+  .orders-list {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .order-card {
+    background: var(--surface);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    transition: box-shadow var(--transition);
+  }
+  .order-card:hover {
+    box-shadow: var(--shadow-md);
+  }
+
+  .order-card-header {
+    background: var(--surface-alt);
+    border-bottom: 1px solid var(--border-light);
+    padding: 16px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .order-header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .order-num {
+    font-weight: 800;
+    font-size: 1.05rem;
+    color: var(--text-primary);
+  }
+
+  .order-date {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+  }
+
+  .order-header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  /* Badges */
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 999px;
+  }
+  .status-badge.confirmed { background: #dbeafe; color: #1e40af; }
+  .status-badge.delivered { background: #dcfce7; color: #166534; }
+  .status-badge.shipped   { background: #ede9fe; color: #5b21b6; }
+  .status-badge.pending   { background: #fef9c3; color: #854d0e; }
+  .status-badge.cancelled { background: #fee2e2; color: #991b1b; }
+
+  .payment-badge {
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .payment-badge.paid { background: #dcfce7; color: #166534; }
+  .payment-badge.cod  { background: #f1f5f9; color: #475569; }
+  .payment-badge.unpaid { background: #fee2e2; color: #991b1b; }
+
+  /* Items Table/List in Card */
+  .order-card-body {
+    padding: 20px 24px;
+  }
+
+  .order-card-items-title {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    font-weight: 700;
+    margin: 0 0 14px;
+  }
+
+  .order-items-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .order-item-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+  }
+
+  .item-thumb {
+    width: 52px;
+    height: 74px;
+    object-fit: cover;
+    border-radius: 4px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    flex-shrink: 0;
+  }
+  .item-thumb-placeholder {
+    width: 52px;
+    height: 74px;
+    background: #e2e8f0;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    flex-shrink: 0;
+  }
+
+  .item-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .item-name {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+    margin: 0 0 3px;
+    line-height: 1.3;
+  }
+  .item-name a {
+    color: inherit;
+    text-decoration: none;
+    transition: color var(--transition);
+  }
+  .item-name a:hover {
+    color: #2563eb;
+  }
+
+  .item-author {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin: 0 0 4px;
+  }
+
+  .item-format-tag {
+    display: inline-block;
+    background: var(--surface-alt);
+    border: 1px solid var(--border-light);
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 1px 6px;
+    border-radius: 4px;
+    color: var(--text-secondary);
+  }
+
+  .item-pricing {
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  .item-subtotal {
+    font-weight: 800;
+    font-size: 1rem;
+    color: var(--text-primary);
+  }
+
+  .item-qty-detail {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  /* Card Footer */
+  .order-card-footer {
+    background: var(--surface-alt);
+    border-top: 1px solid var(--border-light);
+    padding: 16px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .order-footer-address {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    max-width: 400px;
+  }
+  .order-footer-address strong {
+    color: var(--text-primary);
+  }
+
+  .order-footer-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .order-total-block {
+    text-align: right;
+  }
+  .order-total-label {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+  }
+  .order-total-val {
+    font-weight: 800;
+    font-size: 1.15rem;
+    color: var(--text-primary);
+  }
+
+  .btn-receipt {
+    padding: 9px 18px;
+    background: var(--accent-dark);
+    color: #fff;
+    border-radius: var(--radius-pill);
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all var(--transition);
+  }
+  .btn-receipt:hover {
+    background: #272c33;
+    transform: translateY(-1px);
+  }
+
+  @media (max-width: 768px) {
+    .order-card-header, .order-card-body, .order-card-footer { padding: 14px 16px; }
+    .order-card-footer { flex-direction: column; align-items: stretch; text-align: left; }
+    .order-footer-right { justify-content: space-between; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="orders-page">
+  <div class="container">
+
+    <!-- Breadcrumb -->
+    <nav class="orders-breadcrumb" aria-label="Breadcrumb">
+      <a href="{% url 'home' %}">Home</a>
+      <span class="sep">/</span>
+      <span class="active">My Orders</span>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="orders-header">
+      <div>
+        <h1 class="orders-title">My Orders</h1>
+        <p class="orders-subtitle">Review all your placed orders and see every ordered book</p>
+      </div>
+      <div>
+        <span class="orders-count-badge">{{ orders|length }} Order{{ orders|length|pluralize }}</span>
+      </div>
+    </div>
+
+    {% if not orders %}
+      <!-- Empty State -->
+      <div class="orders-empty-card">
+        <div class="empty-icon-wrap">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+          </svg>
+        </div>
+        <h2 class="empty-title">No Orders Placed Yet</h2>
+        <p class="empty-sub">
+          You haven't ordered any books yet. Explore our curated catalog of bestselling fiction, technology, philosophy, and timeless classics.
+        </p>
+        <a href="{% url 'book-catalog' %}" class="btn-confirm-primary" style="display:inline-block;">
+          Explore Books Catalog →
+        </a>
+      </div>
+
+    {% else %}
+
+      <!-- Orders List -->
+      <div class="orders-list">
+        {% for order in orders %}
+          <div class="order-card" id="order-{{ order.id }}">
+
+            <!-- Order Card Header -->
+            <div class="order-card-header">
+              <div class="order-header-left">
+                <span class="order-num">Order #{{ order.id }}</span>
+                <span class="order-date">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:3px;">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="23" y2="10"></line>
+                  </svg>
+                  {{ order.created_at|date:"d M Y, h:i A" }}
+                </span>
+              </div>
+
+              <div class="order-header-right">
+                <!-- Status badge -->
+                {% if order.status == 'delivered' %}
+                  <span class="status-badge delivered">✓ Delivered</span>
+                {% elif order.status == 'confirmed' %}
+                  <span class="status-badge confirmed">✓ Confirmed</span>
+                {% elif order.status == 'shipped' %}
+                  <span class="status-badge shipped">🚚 Shipped</span>
+                {% elif order.status == 'cancelled' %}
+                  <span class="status-badge cancelled">✕ Cancelled</span>
+                {% else %}
+                  <span class="status-badge pending">⏳ Pending</span>
+                {% endif %}
+
+                <!-- Payment status -->
+                {% if order.is_paid %}
+                  <span class="payment-badge paid">✓ Paid</span>
+                {% elif order.payment_method == 'cod' %}
+                  <span class="payment-badge cod">Cash on Delivery</span>
+                {% else %}
+                  <span class="payment-badge unpaid">Unpaid</span>
+                {% endif %}
+              </div>
+            </div>
+
+            <!-- Order Card Body: All Ordered Items -->
+            <div class="order-card-body">
+              <p class="order-card-items-title">
+                Ordered Items ({{ order.total_items }} book{{ order.total_items|pluralize }})
+              </p>
+
+              <div class="order-items-grid">
+                {% for item in order.items.all %}
+                  <div class="order-item-card">
+                    <!-- Cover image -->
+                    {% if item.cover_image %}
+                      <img src="{{ item.cover_image.url }}" alt="{{ item.title }}" class="item-thumb" />
+                    {% elif item.book and item.book.cover_image %}
+                      <img src="{{ item.book.cover_image.url }}" alt="{{ item.title }}" class="item-thumb" />
+                    {% else %}
+                      <div class="item-thumb-placeholder">📖</div>
+                    {% endif %}
+
+                    <!-- Info -->
+                    <div class="item-info">
+                      <h3 class="item-name">
+                        {% if item.book %}
+                          <a href="{% url 'book-detail-page' item.book.id %}">{{ item.title }}</a>
+                        {% else %}
+                          {{ item.title }}
+                        {% endif %}
+                      </h3>
+                      <p class="item-author">By {{ item.author }}</p>
+                      <span class="item-format-tag">{{ item.book_format }}</span>
+                    </div>
+
+                    <!-- Pricing & Quantity -->
+                    <div class="item-pricing">
+                      <div class="item-subtotal">₹{{ item.subtotal }}</div>
+                      <div class="item-qty-detail">{{ item.quantity }} × ₹{{ item.unit_price }}</div>
+                    </div>
+                  </div>
+                {% empty %}
+                  <p style="color:var(--text-muted);font-size:0.85rem;">No items found for this order.</p>
+                {% endfor %}
+              </div>
+            </div>
+
+            <!-- Order Card Footer -->
+            <div class="order-card-footer">
+              <div class="order-footer-address">
+                <strong>Delivery Address:</strong> {{ order.full_address }}
+              </div>
+
+              <div class="order-footer-right">
+                <div class="order-total-block">
+                  <div class="order-total-label">Total Payable</div>
+                  <div class="order-total-val">₹{{ order.total_payable }}</div>
+                </div>
+
+                <a href="{% url 'order-confirmation' order.id %}" class="btn-receipt">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10 9 9 9 8 9"></polyline>
+                  </svg>
+                  View Receipt
+                </a>
+              </div>
+            </div>
+
+          </div>
+        {% endfor %}
+      </div>
+
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}
