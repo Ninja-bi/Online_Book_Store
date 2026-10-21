@@ -33,4 +33,7 @@ Thumbs.db
 # Static files collection
 staticfiles/
 
+# uv lockfile (avoid locking to local Python 3.14 on Linux/Vercel)
+uv.lock
+
 
