@@ -1,0 +1,8 @@
+Django>=6.1.2
+djangorestframework>=3.18.3
+djangorestframework-simplejwt>=5.5.1
+drf-spectacular>=0.30.0
+pillow>=13.0.0
+django-unfold>=0.110.0
+cashfree-pg>=6.0.1
+python-dotenv>=1.2.4
